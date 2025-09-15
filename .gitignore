@@ -1,3 +1,6 @@
-/files/
+# Ignore the contents of the files directory, but not the directory itself
+files/*
+!files/.gitkeep
+
 *.yml
 *.properties
