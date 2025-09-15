@@ -1,8 +1,13 @@
-# MADlib Extension for Greenplum SNE
+# Full Analytics Extension for Greenplum SNE
 
 ## Overview
 
-MADlib brings the power of in-database machine learning and statistics to Greenplum. This extension provides scalable implementations of mathematical, statistical, and machine learning methods for structured and unstructured data.
+This extension brings comprehensive analytics capabilities to Greenplum SNE, including:
+- **MADlib**: In-database machine learning and statistics
+- **pgvector**: Vector similarity search and embeddings
+- **PXF**: External data source connectivity
+
+Together, these provide a complete platform for modern data analytics, ML/AI workloads, and vector-based applications.
 
 ## Features
 
@@ -25,6 +30,14 @@ MADlib 2.2.0 includes:
 - Shortest Path
 - Connected Components
 - Graph Measures
+
+## pgvector 0.7.0 Features
+
+### Vector Operations
+- **Vector Data Type**: Store high-dimensional vectors (up to 16,000 dimensions)
+- **Distance Functions**: L2, cosine, inner product, L1 distances
+- **Indexing**: IVFFlat and HNSW indexes for fast similarity search
+- **Embeddings Support**: Perfect for AI/ML applications with sentence transformers, OpenAI embeddings, etc.
 
 ## Quick Start
 
@@ -233,20 +246,64 @@ SELECT madlib.pca_train(
 SELECT * FROM pca_result;
 ```
 
+### 5. Vector Similarity Search with pgvector
+
+```sql
+-- Create a table for document embeddings
+DROP TABLE IF EXISTS documents;
+CREATE TABLE documents (
+    id SERIAL PRIMARY KEY,
+    title TEXT,
+    content TEXT,
+    embedding vector(1536)  -- OpenAI embedding dimension
+) DISTRIBUTED BY (id);
+
+-- Insert sample documents with mock embeddings
+INSERT INTO documents (title, content, embedding) VALUES
+    ('AI Research', 'Latest developments in artificial intelligence', 
+     array_fill(random(), ARRAY[1536])::vector),
+    ('Database Systems', 'Modern database architecture and design',
+     array_fill(random(), ARRAY[1536])::vector),
+    ('Machine Learning', 'Supervised and unsupervised learning methods',
+     array_fill(random(), ARRAY[1536])::vector),
+    ('Vector Databases', 'Similarity search and vector operations',
+     array_fill(random(), ARRAY[1536])::vector);
+
+-- Find similar documents using cosine similarity
+WITH query_vector AS (
+    SELECT embedding FROM documents WHERE title = 'AI Research'
+)
+SELECT d.title, d.content,
+       d.embedding <=> q.embedding as cosine_distance
+FROM documents d, query_vector q
+WHERE d.title != 'AI Research'
+ORDER BY d.embedding <=> q.embedding
+LIMIT 3;
+
+-- Create an index for faster similarity search
+CREATE INDEX ON documents USING ivfflat (embedding vector_cosine_ops) 
+WITH (lists = 100);
+
+-- Alternatively, use HNSW index (more accurate but slower to build)
+-- CREATE INDEX ON documents USING hnsw (embedding vector_cosine_ops);
+```
+
 ## Architecture
 
-The MADlib extension for Greenplum SNE:
+The Full Analytics extension for Greenplum SNE:
 
 1. **Built on PXF Container**: Extends `greenplum-sne-pxf:latest`
 2. **Components**:
-   - MADlib 2.2.0 libraries and modules
+   - MADlib 2.2.0 libraries and modules  
+   - pgvector 0.7.0 (built-in with Greenplum)
+   - PXF 7.0.0 platform extension framework
    - Python integration for advanced algorithms
-   - SQL extension files
+   - SQL extension files for all components
 3. **Installation Process**:
-   - Extracts MADlib gppkg archive
-   - Copies libraries to `/usr/local/greenplum-db/lib/`
-   - Installs extension files to PostgreSQL extension directory
-   - Processes SQL templates for proper paths
+   - MADlib: Extracts gppkg archive and installs libraries/extensions
+   - pgvector: Auto-enabled (pre-installed with Greenplum 7.5.4)
+   - PXF: Cluster initialization and service startup
+   - All extensions automatically created at container startup
 
 ## Container Stack
 
@@ -256,7 +313,8 @@ greenplum-sne-full:latest
     └── greenplum-sne-pxf:latest
             ├── PXF 7.0.0 (External Data)
             └── greenplum-sne-base:latest
-                    └── Greenplum 7.5.4 (Database)
+                    ├── pgvector 0.7.0 (Vector Search)
+                    └── Greenplum 7.5.4 (Database + Python3)
 ```
 
 ## Performance Considerations
@@ -298,13 +356,23 @@ MADlib uses Python for some algorithms. The container includes Python 3.11 with 
 
 ## Resources
 
+### MADlib
 - [MADlib Documentation](https://madlib.apache.org/docs/latest/index.html)
 - [MADlib GitHub Repository](https://github.com/apache/madlib)
 - [Greenplum MADlib Guide](https://techdocs.broadcom.com/us/en/vmware-tanzu/data-solutions/tanzu-greenplum/7/greenplum-database/analytics-madlib.html)
+
+### pgvector
+- [pgvector Documentation](https://github.com/pgvector/pgvector)
+- [pgvector Performance Guide](https://github.com/pgvector/pgvector#performance)
+- [Vector Similarity Search Examples](https://github.com/pgvector/pgvector#examples)
 
 ## Image Details
 
 - **Full Image**: `greenplum-sne-full:7.5.4-pxf7.0.0-madlib2.2.0`
 - **Size**: ~4.5GB
-- **Includes**: Greenplum 7.5.4 + PXF 7.0.0 + MADlib 2.2.0
+- **Includes**: 
+  - Greenplum 7.5.4 with Python 3.11
+  - PXF 7.0.0 (Platform Extension Framework)
+  - MADlib 2.2.0 (Machine Learning Library) 
+  - pgvector 0.7.0 (Vector Similarity Search)
 - **Base OS**: Rocky Linux 9

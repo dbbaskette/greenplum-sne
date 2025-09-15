@@ -71,6 +71,10 @@ sudo -u gpadmin bash -c "
     echo 'Checking MADlib extension...'
     psql -d postgres -c \"CREATE EXTENSION IF NOT EXISTS madlib CASCADE;\" 2>/dev/null || echo 'MADlib extension already exists or creation failed'
     
+    # Create pgvector extension in postgres database if not exists
+    echo 'Checking pgvector extension...'
+    psql -d postgres -c \"CREATE EXTENSION IF NOT EXISTS vector;\" 2>/dev/null || echo 'pgvector extension already exists or creation failed'
+    
     echo '✅ Greenplum database with PXF and MADlib is ready!'
     echo 'Connection details:'
     echo '  Host: localhost (or container IP)'
@@ -84,6 +88,9 @@ sudo -u gpadmin bash -c "
     echo ''
     echo 'MADlib Status:'
     psql -d postgres -t -c \"SELECT madlib.version();\" 2>/dev/null || echo 'MADlib not yet initialized'
+    echo ''
+    echo 'pgvector Status:'
+    psql -d postgres -t -c \"SELECT extversion FROM pg_extension WHERE extname='vector';\" 2>/dev/null || echo 'pgvector not yet initialized'
 "
 
 # Keep container running and monitor processes

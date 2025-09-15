@@ -11,7 +11,7 @@ Welcome to the Greenplum Single Node Environment (SNE) for Docker! This project 
 - ✅ **Clean & Minimal**: No unnecessary extensions or components, just the essentials.
 - ✅ **Fast Startup**: Get up and running in approximately 2-3 minutes.
 - ✅ **Cross-Platform**: Works on any Docker-enabled machine (Linux, macOS, Windows).
-- ✅ **PXF and MADlib Extensions**: Includes the Greenplum Platform Extension Framework (PXF) and MADlib for advanced analytics.
+- ✅ **Full Analytics Stack**: Includes PXF, MADlib, and pgvector extensions plus Python 3.11 (PL/Python3U) for complete data analytics capabilities.
 
 ---
 
@@ -130,10 +130,17 @@ docker run -d \
   greenplum-sne-full:latest
 ```
 
-**Verifying the MADlib Installation**
+**Verifying All Extensions**
 
 ```bash
+# Check all extensions
+psql -h localhost -p 15432 -U gpadmin -d postgres -c "\\dx"
+
+# Test MADlib
 psql -h localhost -p 15432 -U gpadmin -d postgres -c "SELECT madlib.version();"
+
+# Test pgvector
+psql -h localhost -p 15432 -U gpadmin -d postgres -c "SELECT '[1,2,3]'::vector <-> '[4,5,6]'::vector;"
 ```
 
 For more information, refer to the official [Apache MADlib Documentation](https://madlib.apache.org/).
@@ -156,9 +163,9 @@ This project uses a **multi-stage build approach** that creates committed Docker
 
 After running the build scripts, you'll have three sets of images:
 
-- **`greenplum-db:7.x.x`**: The base Greenplum image without any extensions.
-- **`greenplum-db-pxf:7.x.x`**: The Greenplum image with the PXF extension.
-- **`greenplum-sne-full:latest`**: The Greenplum image with both PXF and MADlib.
+- **`greenplum-db:7.x.x`**: The base Greenplum image with pgvector and Python support.
+- **`greenplum-sne-pxf:latest`**: The Greenplum image with PXF extension added.
+- **`greenplum-sne-full:latest`**: The complete analytics image with PXF, MADlib, and pgvector.
 
 This layered approach allows you to choose the image that best fits your needs.
 
