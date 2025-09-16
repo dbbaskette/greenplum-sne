@@ -56,6 +56,17 @@ find /usr/local/greenplum-db/share -name "madlib--*.sql.in" | while read templat
     sed -i "s#MADLIB_SHAREDIR#/usr/local/greenplum-db/share/madlib/modules#g" "$output"
 done
 
+# Install Python data science packages for PL/Python3U
+echo "Installing Python data science packages..."
+
+# Ensure pip is available for Python 3.11 (used by PL/Python3U)
+python3.11 -m ensurepip --upgrade 2>/dev/null || echo "pip already available for Python 3.11"
+
+# Install packages for Python 3.11 (PL/Python3U environment)
+python3.11 -m pip install --no-cache-dir numpy scikit-learn pandas scipy matplotlib
+
+echo "Python packages installed for PL/Python3U"
+
 # Set proper ownership
 chown -R gpadmin:gpadmin /usr/local/greenplum-db/lib/madlib* 2>/dev/null || true
 chown -R gpadmin:gpadmin /usr/local/greenplum-db/share/postgresql/extension/madlib* 2>/dev/null || true
@@ -71,6 +82,13 @@ echo ""
 echo "MADlib Configuration:"
 echo "  Version: 2.2.0"
 echo "  Greenplum Version: 7"
+echo ""
+echo "Python Data Science Packages:"
+echo "  - NumPy (arrays and numerical computing)"
+echo "  - scikit-learn (machine learning)"
+echo "  - pandas (data manipulation)"
+echo "  - SciPy (scientific computing)"
+echo "  - matplotlib (plotting)"
 echo ""
 echo "To enable MADlib in a database, run:"
 echo "  CREATE EXTENSION madlib CASCADE;"

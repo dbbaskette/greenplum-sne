@@ -1,128 +1,139 @@
-# 🚀 Greenplum Single Node Environment (SNE) for Docker
+<h1 align="center">🌿 <span style="color:#3CB371;font-family:'Poppins',sans-serif;">Greenplum SNE</span> <span style="color:#1E90FF;font-family:'Fira Code',monospace;">for Docker</span></h1>
+<p align="center" style="font-size:1.1rem;">
+  Build lightning-fast single-node <strong>Greenplum 7.5.4</strong> environments with curated analytics extensions.<br/>
+  <span style="color:#FF8A00;">PXF</span> • <span style="color:#7B61FF;">MADlib</span> • <span style="color:#00C49A;">pgvector</span> • <span style="color:#F45B69;">Python 3.11 Data Science Stack</span>
+</p>
 
-Welcome to the Greenplum Single Node Environment (SNE) for Docker! This project provides a clean, minimal, and easy-to-use Docker container for running a single-node instance of **Greenplum Database 7.x**. It's perfect for development, testing, and learning.
+<p align="center">
+  <img alt="Greenplum" src="https://img.shields.io/badge/Greenplum-7.5.4-27AE60?style=for-the-badge&logo=postgresql&logoColor=white"/>
+  <img alt="PXF" src="https://img.shields.io/badge/PXF-7.0.0-1E90FF?style=for-the-badge"/>
+  <img alt="MADlib" src="https://img.shields.io/badge/MADlib-2.2.0-7F3FBF?style=for-the-badge"/>
+  <img alt="License" src="https://img.shields.io/badge/Use%20with-VMware%20Tanzu%20License-34495E?style=for-the-badge"/>
+</p>
 
-> 💡 **Official Documentation**: For in-depth installation and configuration details, always refer to the official **[VMware Tanzu Greenplum Documentation](https://techdocs.broadcom.com/us/en/vmware-tanzu/data-solutions/tanzu-greenplum/7/greenplum-database/install_guide-install_gpdb.html)**.
-
-## ✨ Key Features
-
-- ✅ **Single-Node Greenplum 7.x**: A fully functional Greenplum database instance.
-- ✅ **PostgreSQL Interface**: Connect using standard PostgreSQL tools.
-- ✅ **Clean & Minimal**: No unnecessary extensions or components, just the essentials.
-- ✅ **Fast Startup**: Get up and running in approximately 2-3 minutes.
-- ✅ **Cross-Platform**: Works on any Docker-enabled machine (Linux, macOS, Windows).
-- ✅ **Full Analytics Stack**: Includes PXF, MADlib, and pgvector extensions plus Python 3.11 (PL/Python3U) for complete data analytics capabilities.
-
----
-
-## 📋 Prerequisites
-
-Before you begin, ensure you have the following:
-
-1.  **🟢 Greenplum RPM**: You must download the Greenplum Database RPM file from the [VMware Tanzu Network](https://network.tanzu.vmware.com/products/vmware-tanzu-greenplum).
-2.  **🐳 Docker**: Docker Desktop or Docker Engine must be installed and running.
-3.  **🖥️ Platform**: The container runs a `linux/amd64` image. On Apple Silicon (M1/M2/M3) Macs, Docker will use Rosetta 2 for emulation.
-
-### ⚠️ Important Note for Docker Desktop Users (macOS & Windows)
-
-It is **required** to **enable the Docker VMM (Virtual Machine Manager) setting** in Docker Desktop for this container to work, especially on systems with Apple Silicon. This is a mandatory setting.
-
--   **To enable**: Go to **Docker Desktop > Settings > General** and select the appropriate VMM setting.
--   **Learn More**: Refer to the official Docker documentation for details on what this setting does and its impact on performance.
+> 💡 <strong>Official Documentation:</strong> Always consult the <a href="https://techdocs.broadcom.com/us/en/vmware-tanzu/data-solutions/tanzu-greenplum/7/greenplum-database/install_guide-install_gpdb.html">VMware Tanzu Greenplum docs</a> for production guidance.
 
 ---
 
-## 🚀 Getting Started
+## 📄 Table of Contents
+- [Why SNE?](#-why-sne)
+- [Image Lineup](#-image-lineup)
+- [Quick Start](#-quick-start)
+- [Choose Your Adventure](#-choose-your-adventure)
+- [Connect & Verify](#-connect--verify)
+- [How It Works](#-how-it-works)
+- [Project Atlas](#-project-atlas)
+- [Troubleshooting](#-troubleshooting)
+- [Resources](#-resources)
+- [License](#-license)
 
-### 1. Download the Greenplum RPM
+---
 
-Place the Greenplum Database RPM file you downloaded into the `files/` directory. The build script will automatically pick it up.
+## ✨ Why SNE?
+- ✅ **Single-node, testing instance of Greenplum** built on Rocky Linux 9.
+- ⚙️ **Automated provisioning** via `scripts/install-greenplum.sh` with SSH trust, cluster init, and open network access baked in.
+- 🧩 **Composable layers**: start minimal, stack on PXF (external data), MADlib (ML), pgvector, and preloaded Python data science goodies.
+- 🚀 **Fast feedback loop**: build → commit → run in minutes thanks to opinionated Docker scripts.
+- 🛠️ **Developer focused**: perfect for demos, integration tests, AI/ML prototypes, or learning the Greenplum MPP architecture.
 
-```bash
-# The filename will vary based on the version you download
-mv ~/Downloads/greenplum-db-*.rpm files/
-```
+### Feature Highlights
+| Layer | Included Goodies | Notes |
+| --- | --- | --- |
+| <span style="color:#3CB371;font-weight:bold;">Base</span> | Greenplum 7.5.4, pgvector 0.7.0, PL/Python3U, SSH | Minimal core database image (`greenplum-db:7.5.4`, tag as `greenplum-sne-base:latest`) |
+| <span style="color:#1E90FF;font-weight:bold;">PXF</span> | Java 11, PXF 7.0.0, auto cluster start | External tables to S3, HDFS, JDBC, Hive, more |
+| <span style="color:#7B61FF;font-weight:bold;">Full</span> | MADlib 2.2.0, NumPy 2.3, pandas 2.3, scikit-learn 1.7, matplotlib 3.10 | End-to-end analytics & vector stack |
 
-### 2. Build the Docker Container
+---
 
-Run the build script. This will create a Docker image tagged with the Greenplum version.
+## 🧱 Image Lineup
+| Tag | Size* | Purpose | Ports |
+| --- | --- | --- | --- |
+| `greenplum-base:7.5.4` | ~2.6 GB | Rocky Linux + dependencies + `gpadmin` user. No DB yet. | 22 |
+| `greenplum-db:7.5.4` + `greenplum-sne-base:latest` | ~4.3 GB | Ready-to-run Greenplum with pgvector + Python 3.11. | 22, 5432, 6000-6010 |
+| `greenplum-sne-pxf:latest` | ~4.5 GB | Adds Java + PXF + orchestration. | 22, 5432, 5888, 6000-6010 |
+| `greenplum-sne-full:latest` | ~4.5 GB | Full analytics stack: PXF + MADlib + pgvector + PyData. | 22, 5432, 5888, 6000-6010 |
 
-```bash
+<sub>*Sizes are approximate compressed image footprints.</sub>
+
+> 🧭 <strong>Versioning:</strong> Check the repository <code>VERSION</code> file (current <code>0.0.5</code>) for project release tracking.
+
+---
+
+## ⚡ Quick Start
+
+<div align="center" style="padding:1rem;border:2px solid #3CB371;border-radius:12px;background:linear-gradient(120deg,#e6fffa,#f0f4ff);">
+<pre style="text-align:left;margin:0;">
+<span style="color:#3CB371;"># 1 ─ Download Greenplum RPM</span>
+mv ~/Downloads/greenplum-db-7.5.4-*.rpm files/
+
+<span style="color:#1E90FF;"># 2 ─ Build the base image</span>
 ./build-container.sh
-```
 
-### 3. Run the Container
+<span style="color:#FF8A00;"># 3 ─ Alias for extension builds</span>
+docker tag greenplum-db:7.5.4 greenplum-sne-base:latest
 
-Launch the container in detached mode. This command maps the internal PostgreSQL port `5432` to `15432` on your local machine.
-
-```bash
+<span style="color:#7B61FF;"># 4 ─ Run the container</span>
 docker run -d \
   -p 15432:5432 \
   --hostname greenplum-sne \
   --name greenplum-sne \
-  greenplum-db:7.x.x # 👈 Replace with the actual version from the build
-```
+  greenplum-db:7.5.4
+</pre>
+</div>
 
-### 4. Connect to the Database
+> 🔑 Default credentials → user: <code>gpadmin</code> • password: <code>VMware1!</code> • database: <code>postgres</code>
 
-You can now connect to the Greenplum database using `psql` or any other PostgreSQL-compatible client.
-
-```bash
-psql -h localhost -p 15432 -U gpadmin -d postgres
-```
-
-> **Password**: `VMware1!`
+### Prerequisites Checklist
+- 🟩 <strong>Greenplum RPM</strong> placed in `files/` (`greenplum-db-7.5.4-el9-x86_64.rpm`).
+- 🟦 <strong>Docker</strong> Desktop/Engine (with the VMM option enabled on macOS/Windows).
+- 🟥 <strong>Architecture</strong>: `linux/amd64` (Apple Silicon uses Rosetta 2 emulation).
+- 🟨 Optional extras in `files/`: `pxf-gp7-7.0.0-2.el9.x86_64.rpm`, `madlib-2.2.0-gp7-el9-x86_64.tar.gz`.
 
 ---
 
-## 🧩 Extensions: PXF and MADlib
+## 🧭 Choose Your Adventure
 
-This project provides a layered approach to building containers with extensions. You can choose a base container, a container with PXF, or a full container with PXF and MADlib.
+<table>
+  <thead>
+    <tr>
+      <th style="text-align:left;">Scenario</th>
+      <th style="text-align:left;">Build Command</th>
+      <th style="text-align:left;">Resulting Image</th>
+      <th style="text-align:left;">Best For</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>🚦 Minimal database (fastest)</td>
+      <td><code>./build-container.sh</code><br/><code>docker tag greenplum-db:7.5.4 greenplum-sne-base:latest</code></td>
+      <td><code>greenplum-db:7.5.4</code> + <code>greenplum-sne-base:latest</code></td>
+      <td>SQL development, pgvector prototypes</td>
+    </tr>
+    <tr>
+      <td>🌐 External data connectivity</td>
+      <td><code>./build-pxf-extension.sh</code></td>
+      <td><code>greenplum-sne-pxf:latest</code></td>
+      <td>S3/HDFS/Hive/JDBC federated queries</td>
+    </tr>
+    <tr>
+      <td>🧠 Full analytics lab</td>
+      <td><code>./build-full-extensions.sh</code></td>
+      <td><code>greenplum-sne-full:latest</code></td>
+      <td>MADlib ML, vector search, Python data science</td>
+    </tr>
+  </tbody>
+</table>
 
-### PXF Extension
-
-The Greenplum Platform Extension Framework (PXF) is included in this project, allowing you to connect to external data sources like S3, HDFS, and more.
-
-**Building the PXF-Enabled Container**
-
-To create a container with PXF, run the `build-pxf-extension.sh` script. This will create a new Docker image called `greenplum-db-pxf`.
-
+### Example Runtime Commands
 ```bash
-./build-pxf-extension.sh
-```
-
-**Running the PXF-Enabled Container**
-
-To run the container with PXF, use the `greenplum-db-pxf` image.
-
-```bash
+# PXF-enabled container (adds 5888 for PXF REST API)
 docker run -d \
-  -p 15432:5432 \
-  -p 5888:5888 \
+  -p 15432:5432 -p 5888:5888 \
   --hostname greenplum-sne-pxf \
   --name greenplum-sne-pxf \
-  greenplum-db-pxf:7.x.x # 👈 Replace with the actual version from the build
-```
+  greenplum-sne-pxf:latest
 
-For more information, refer to the `PXF-EXTENSION.md` file in this repository and the official [PXF Installation Documentation](https://techdocs.broadcom.com/us/en/vmware-tanzu/data-solutions/tanzu-greenplum-platform-extension-framework/6-6/gp-pxf/installing_pxf.html).
-
-### MADlib Extension
-
-Apache MADlib is an open-source library for scalable in-database analytics.
-
-**Building the Full Container (with MADlib)**
-
-To create a container with both PXF and MADlib, run the `build-full-extensions.sh` script. This will create a new Docker image called `greenplum-sne-full`.
-
-```bash
-./build-full-extensions.sh
-```
-
-**Running the Full Container**
-
-To run the container with PXF and MADlib, use the `greenplum-sne-full` image.
-
-```bash
+# Full analytics container
 docker run -d \
   -p 15432:5432 \
   --hostname greenplum-sne-full \
@@ -130,47 +141,85 @@ docker run -d \
   greenplum-sne-full:latest
 ```
 
-**Verifying All Extensions**
+---
+
+## 🔌 Connect & Verify
 
 ```bash
-# Check all extensions
-psql -h localhost -p 15432 -U gpadmin -d postgres -c "\\dx"
+# Connect with psql
+psql -h localhost -p 15432 -U gpadmin -d postgres
 
-# Test MADlib
-psql -h localhost -p 15432 -U gpadmin -d postgres -c "SELECT madlib.version();"
+# List installed extensions
+\dx
 
-# Test pgvector
-psql -h localhost -p 15432 -U gpadmin -d postgres -c "SELECT '[1,2,3]'::vector <-> '[4,5,6]'::vector;"
+# Check MADlib + vector functionality (full image)
+SELECT madlib.version();
+SELECT '[1,2,3]'::vector <-> '[4,5,6]'::vector;
+
+# Confirm PXF cluster health (PXF image)
+docker exec greenplum-sne-pxf sudo -u gpadmin bash -lc \
+  "source /usr/local/greenplum-db/greenplum_path.sh && \
+   export PXF_HOME=/usr/local/pxf-gp7 && \
+   export PXF_BASE=/home/gpadmin/pxf && \
+   export JAVA_HOME=/usr/lib/jvm/java-11-openjdk && \
+   export PATH=\$PXF_HOME/bin:\$PATH && \
+   pxf cluster status"
 ```
 
-For more information, refer to the official [Apache MADlib Documentation](https://madlib.apache.org/).
+> 🧪 <strong>Sample ML workflow:</strong> Open <code>MADLIB-EXTENSION.md</code> for full SQL + PL/Python3U demos including regression, clustering, and pandas/scikit-learn integrations.
 
 ---
 
-## 🏗️ How the Build Process Works
+## 🛠️ How It Works
 
-This project uses a **multi-stage build approach** that creates committed Docker images for fast, repeatable deployments.
+1. <span style="font-family:'JetBrains Mono',monospace;color:#3CB371;">Dockerfile bootstrap</span> → installs Rocky Linux dependencies, Python 3.11, Java 11, SSH, compilers.
+2. <span style="font-family:'Playfair Display',serif;color:#1E90FF;">`install-greenplum.sh`</span> → configures hostnames, sets `gpadmin`, initializes Greenplum, enables external access.
+3. <span style="font-family:'Fira Code',monospace;color:#FF8A00;">Commit & tag</span> → the running container is committed to `greenplum-db:7.5.4`; add the alias with `docker tag greenplum-db:7.5.4 greenplum-sne-base:latest`.
+4. <span style="font-family:'Lora',serif;color:#7B61FF;">PXF layer</span> → `extensions/pxf/Dockerfile` installs the RPM, seeds configs, and swaps in `startup-pxf.sh` for automatic service start.
+5. <span style="font-family:'Source Code Pro',monospace;color:#FF5D8F;">Full analytics layer</span> → `extensions/madlib/Dockerfile` unpacks MADlib, ensures pgvector is active, and adds Python data science wheels.
 
-### Build Process Overview
+📦 <strong>Composability:</strong>
+```
+greenplum-sne-full:latest
+└── MADlib 2.2.0 + PyData stack
+    └── greenplum-sne-pxf:latest
+        └── PXF runtime & REST service
+            └── greenplum-sne-base:latest (Greenplum 7.5.4 + pgvector)
+```
 
-1. **Base Layer Creation**: Builds `greenplum-base:7.x.x` with Rocky Linux 9 + all dependencies
-2. **Installation Container**: Runs a temporary container with hostname `greenplum-sne` 
-3. **Greenplum Installation**: Installs and configures Greenplum database inside the running container
-4. **Automatic Commit**: **Commits the running container** to `greenplum-db:7.x.x` 
-5. **Cleanup**: Removes temporary build containers, leaving you with a ready-to-use base image
+---
 
-### Available Images After Build
+## 🗺️ Project Atlas
 
-After running the build scripts, you'll have three sets of images:
+| Path | What Lives Here |
+| --- | --- |
+| `container/Dockerfile` | Base build instructions & runtime bootstrap.
+| `scripts/install-greenplum.sh` | Automated install + cluster init logging (<code>/tmp/greenplum-install.log</code>).
+| `extensions/pxf/` | Dockerfile + install/start scripts for PXF 7.0.0.
+| `extensions/madlib/` | Dockerfile + install/start scripts for MADlib & PyData stack.
+| `IMAGE-LAYERS.md` | Deep dive sizing + retention recommendations.
+| `PXF-EXTENSION.md` | Usage, configuration, and troubleshooting for external data.
+| `MADLIB-EXTENSION.md` | End-to-end analytics cookbook with SQL/PL/Python recipes.
+| `BASE-IMAGE-INFO.md` | Snapshot of the vanilla image and extension entry points.
 
-- **`greenplum-db:7.x.x`**: The base Greenplum image with pgvector and Python support.
-- **`greenplum-sne-pxf:latest`**: The Greenplum image with PXF extension added.
-- **`greenplum-sne-full:latest`**: The complete analytics image with PXF, MADlib, and pgvector.
+---
 
-This layered approach allows you to choose the image that best fits your needs.
+## 🛟 Troubleshooting
+- 🔍 **Install logs**: `docker logs greenplum-build-temp` during builds, plus `/tmp/greenplum-install.log` inside the container.
+- ⏱️ **Install timeout**: `build-container.sh` polls for up to 10 minutes—check for RPM mismatches or disk pressure if it fails.
+- 🔐 **Connection refused**: ensure Docker Desktop VMM is enabled and port `15432` isn't in use.
+- 🌐 **PXF hiccups**: verify Java via `docker exec greenplum-sne-pxf java -version` and re-sync configs with `pxf cluster sync` (see `PXF-EXTENSION.md`).
+- 🧠 **MADlib missing**: `DROP EXTENSION IF EXISTS madlib CASCADE; CREATE EXTENSION madlib CASCADE;` to refresh metadata.
+
+---
+
+## 🔗 Resources
+- <a href="https://techdocs.broadcom.com/us/en/vmware-tanzu/data-solutions/tanzu-greenplum/7/greenplum-database/install_guide-install_gpdb.html">Greenplum Installation Guide</a>
+- <a href="https://techdocs.broadcom.com/us/en/vmware-tanzu/data-solutions/tanzu-greenplum-platform-extension-framework/6-6/gp-pxf/overview_pxf.html">PXF Documentation</a>
+- <a href="https://madlib.apache.org/docs/latest/index.html">MADlib Reference</a>
+- <a href="https://github.com/pgvector/pgvector">pgvector GitHub</a>
 
 ---
 
 ## 📄 License
-
-This project is provided as-is. The Greenplum Database software contained within the Docker image is subject to its own licensing terms. Please consult the official VMware Tanzu Greenplum documentation for details.
+This project ships the automation and container scaffolding <em>as-is</em>. The included Greenplum Database, PXF, and MADlib artifacts remain subject to their respective VMware Tanzu and Apache licenses—review and comply with all vendor terms before redistribution.

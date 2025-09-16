@@ -91,6 +91,9 @@ sudo -u gpadmin bash -c "
     echo ''
     echo 'pgvector Status:'
     psql -d postgres -t -c \"SELECT extversion FROM pg_extension WHERE extname='vector';\" 2>/dev/null || echo 'pgvector not yet initialized'
+    echo ''
+    echo 'Python Packages (PL/Python3U):'
+    psql -d postgres -t -c \"SELECT CASE WHEN EXISTS(SELECT 1 FROM pg_language WHERE lanname = 'plpython3u') THEN 'NumPy, scikit-learn, pandas available in PL/Python3U' ELSE 'PL/Python3U not available' END;\" 2>/dev/null || echo 'Unable to check Python packages'
 "
 
 # Keep container running and monitor processes

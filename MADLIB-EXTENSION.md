@@ -39,6 +39,15 @@ MADlib 2.2.0 includes:
 - **Indexing**: IVFFlat and HNSW indexes for fast similarity search
 - **Embeddings Support**: Perfect for AI/ML applications with sentence transformers, OpenAI embeddings, etc.
 
+## Python Data Science Stack
+
+### PL/Python3U with Complete Package Suite
+- **NumPy 2.3.3**: Multi-dimensional arrays and numerical computing
+- **scikit-learn 1.7.2**: Machine learning algorithms and tools
+- **pandas 2.3.2**: Data manipulation and analysis
+- **SciPy 1.16.2**: Scientific computing and statistics
+- **matplotlib 3.10.6**: Data visualization and plotting
+
 ## Quick Start
 
 ### Building the Full Extensions Container
@@ -288,6 +297,65 @@ WITH (lists = 100);
 -- CREATE INDEX ON documents USING hnsw (embedding vector_cosine_ops);
 ```
 
+### 6. Custom Python Analytics Functions
+
+```sql
+-- Create a Python function using scikit-learn
+CREATE OR REPLACE FUNCTION sklearn_linear_regression(
+    x_values FLOAT8[], 
+    y_values FLOAT8[], 
+    predict_x FLOAT8
+) 
+RETURNS FLOAT8 
+AS $$
+import numpy as np
+from sklearn.linear_model import LinearRegression
+
+# Convert inputs to numpy arrays
+X = np.array(x_values).reshape(-1, 1)
+y = np.array(y_values)
+
+# Train the model
+model = LinearRegression().fit(X, y)
+
+# Make prediction
+prediction = model.predict([[predict_x]])
+return float(prediction[0])
+$$ LANGUAGE plpython3u;
+
+-- Use the function
+SELECT sklearn_linear_regression(
+    ARRAY[1.0, 2.0, 3.0, 4.0, 5.0],
+    ARRAY[2.0, 4.0, 6.0, 8.0, 10.0],
+    6.0
+) as predicted_value;
+
+-- Create a function that processes table data with pandas
+CREATE OR REPLACE FUNCTION analyze_with_pandas(table_name TEXT)
+RETURNS TEXT
+AS $$
+import pandas as pd
+
+# Get data from Greenplum table
+query = f"SELECT * FROM {table_name}"
+result = plpy.execute(query)
+
+# Convert to pandas DataFrame
+df = pd.DataFrame(result)
+
+# Perform analysis
+if len(df) > 0:
+    numeric_cols = df.select_dtypes(include=[float, int]).columns
+    if len(numeric_cols) > 0:
+        stats = df[numeric_cols].describe()
+        return f"Table {table_name} analysis: {len(df)} rows, numeric columns: {list(numeric_cols)}, mean values: {dict(df[numeric_cols].mean())}"
+    else:
+        return f"Table {table_name}: {len(df)} rows, no numeric columns found"
+else:
+    return f"Table {table_name} is empty"
+$$ LANGUAGE plpython3u;
+```
+
 ## Architecture
 
 The Full Analytics extension for Greenplum SNE:
@@ -297,7 +365,8 @@ The Full Analytics extension for Greenplum SNE:
    - MADlib 2.2.0 libraries and modules  
    - pgvector 0.7.0 (built-in with Greenplum)
    - PXF 7.0.0 platform extension framework
-   - Python integration for advanced algorithms
+   - Python 3.11 with complete data science stack
+   - Full NumPy, scikit-learn, pandas, SciPy, matplotlib suite
    - SQL extension files for all components
 3. **Installation Process**:
    - MADlib: Extracts gppkg archive and installs libraries/extensions
