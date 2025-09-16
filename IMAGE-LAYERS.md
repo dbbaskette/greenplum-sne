@@ -18,7 +18,7 @@
 
 **Do you need it?** Only if you plan to build different Greenplum configurations
 
-### 2. `greenplum-db:7.5.4` (4.26GB)
+### 2. `greenplum-sne-base:7.5.4` (4.26GB)
 **What it is:** Base + Greenplum 7.5.4 installed and configured
 **Contents:**
 - Everything from `greenplum-base:7.5.4`
@@ -28,23 +28,10 @@
 - Ready to run immediately
 
 **Purpose:**
-- Version-specific tag of working Greenplum
-- Standard Docker naming convention
+- Version-specific tag of working Greenplum SNE
+- Primary image for PlumChat development and extension layers
 
-**Do you need it?** Redundant with `greenplum-sne-base:latest`
-
-### 3. `greenplum-sne-base:latest` (4.26GB)
-**What it is:** Identical to `greenplum-db:7.5.4` but with descriptive naming
-**Contents:**
-- Same as `greenplum-db:7.5.4`
-- Your "known good state" for PlumChat project
-
-**Purpose:**
-- Clear base image for adding PXF, MADlib, etc.
-- Project-specific naming
-- Primary image for PlumChat development
-
-**Do you need it?** YES - This is your main base image
+**Do you need it?** YES - This is your main base image (also tagged as `greenplum-sne-base:latest`)
 
 ## Recommendations
 
@@ -52,27 +39,27 @@
 Keep only what you need for PlumChat development:
 ```bash
 # Keep this - your main base for extensions
-greenplum-sne-base:latest (4.26GB)
+greenplum-sne-base:7.5.4 (also tagged latest)
 
-# Remove these to save 6.86GB:
-docker rmi greenplum-db:7.5.4 greenplum-base:7.5.4
+# Remove this to save 2.6GB:
+docker rmi greenplum-base:7.5.4
 ```
 
 ### Development Setup:
 If you plan to experiment with different Greenplum configurations:
 ```bash
 # Keep both
-greenplum-sne-base:latest (4.26GB) - For PlumChat/PXF work
+greenplum-sne-base:7.5.4 (also tagged latest) - For PlumChat/PXF work
 greenplum-base:7.5.4 (2.6GB) - For building new variants
 
-# Remove this redundant one:
-docker rmi greenplum-db:7.5.4
+# Optional cleanup:
+# docker rmi greenplum-base:7.5.4
 ```
 
 ### Conservative Setup:
 Keep everything if you're unsure:
 ```bash
-# All three images - uses ~11GB total
+# Both images - uses ~6.9GB total
 ```
 
 ## Usage Examples
@@ -96,6 +83,5 @@ FROM greenplum-base:7.5.4
 ```
 
 ## Summary
-- **Essential:** `greenplum-sne-base:latest`
+- **Essential:** `greenplum-sne-base:7.5.4` (also `latest`)
 - **Optional:** `greenplum-base:7.5.4` (if building variants)
-- **Redundant:** `greenplum-db:7.5.4` (can be removed)

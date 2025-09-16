@@ -3,8 +3,8 @@
 ## Known Good State - Ready for Extensions
 
 **Image Tags:**
-- `greenplum-db:7.5.4-base` - Clean Greenplum 7.5.4 database only
-- `greenplum-sne-base:latest` - Same image with descriptive name
+- `greenplum-sne-base:7.5.4` - Clean Greenplum 7.5.4 database only
+- `greenplum-sne-base:latest` - Floating tag for the current build
 
 **Base Image Contents:**
 - ✅ Rocky Linux 9 base OS
@@ -61,7 +61,7 @@ psql -h localhost -p 15432 -U gpadmin -d postgres
 
 ## Image Size
 - **Base OS layer**: ~2.6GB (`greenplum-base:7.5.4`)
-- **With Greenplum**: ~4.26GB (`greenplum-sne-base:latest`)
+- **With Greenplum**: ~4.26GB (`greenplum-sne-base:7.5.4` / `latest`)
 - **Available for extensions**: Plenty of room for PXF, MADlib, etc.
 
 ---

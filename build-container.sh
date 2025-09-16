@@ -7,7 +7,7 @@ set -e
 
 # Configuration
 BASE_IMAGE_NAME="greenplum-base"
-INSTALLED_IMAGE_NAME="greenplum-db"
+INSTALLED_IMAGE_NAME="greenplum-sne-base"
 VERSION="7.5.4"
 BUILD_CONTAINER_NAME="greenplum-build-temp"
 

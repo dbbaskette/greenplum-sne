@@ -17,8 +17,9 @@ if [ "$CURRENT_HOSTNAME" != "greenplum-sne" ]; then
     # Update system files
     hostnamectl set-hostname greenplum-sne 2>/dev/null || echo "greenplum-sne" > /etc/hostname
     
-    # Update /etc/hosts
-    sed -i "s/$CURRENT_HOSTNAME/greenplum-sne/g" /etc/hosts
+    # Update /etc/hosts (copy and replace to avoid in-place edit issues)
+    cp /etc/hosts /tmp/hosts.tmp
+    sed "s/$CURRENT_HOSTNAME/greenplum-sne/g" /tmp/hosts.tmp > /etc/hosts 2>/dev/null || echo "Note: Could not update /etc/hosts (managed by Docker)"
     
     # Update Greenplum configuration files as gpadmin
     sudo -u gpadmin bash -c "

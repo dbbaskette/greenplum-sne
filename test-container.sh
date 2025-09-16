@@ -6,7 +6,7 @@
 set -e
 
 # Configuration
-IMAGE_NAME="greenplum-db:7.5.4"
+IMAGE_NAME="greenplum-sne-base:7.5.4"
 CONTAINER_NAME="greenplum-test"
 TEST_TIMEOUT=300  # 5 minutes
 

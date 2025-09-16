@@ -2,6 +2,9 @@
 
 # Full Extensions Builder for Greenplum SNE
 # Builds container with both PXF and MADlib extensions
+#
+# Usage: ./build-full-extensions.sh [--keep-intermediate]
+#   --keep-intermediate: Keep intermediate images (PXF) instead of cleaning them up
 
 set -e
 
@@ -10,6 +13,12 @@ BASE_IMAGE="greenplum-sne-base:latest"
 PXF_IMAGE_NAME="greenplum-sne-pxf"
 FULL_IMAGE_NAME="greenplum-sne-full"
 VERSION="7.5.4-pxf7.0.0-madlib2.2.0"
+
+# Check for --keep-intermediate flag
+KEEP_INTERMEDIATE=false
+if [[ "$1" == "--keep-intermediate" ]]; then
+    KEEP_INTERMEDIATE=true
+fi
 
 echo "=== Greenplum SNE Full Extensions Builder ==="
 echo "Building: ${FULL_IMAGE_NAME}:${VERSION}"
@@ -68,6 +77,22 @@ docker build \
 
 echo ""
 echo "✅ Full extensions build completed successfully!"
+
+# Step 5: Clean up intermediate images (keep only the full image)
+if [ "$KEEP_INTERMEDIATE" = false ]; then
+    echo ""
+    echo "Cleaning up intermediate images..."
+    echo "Removing intermediate PXF image..."
+    docker rmi "${PXF_IMAGE_NAME}:latest" 2>/dev/null || echo "  PXF image already removed or in use"
+
+    # Also clean up dangling images if any
+    echo "Removing any dangling images..."
+    docker image prune -f 2>/dev/null || echo "  No dangling images to remove"
+else
+    echo ""
+    echo "Keeping intermediate images (--keep-intermediate flag used)"
+fi
+
 echo ""
 echo "Images created:"
 echo "  Full extension: ${FULL_IMAGE_NAME}:${VERSION}"
